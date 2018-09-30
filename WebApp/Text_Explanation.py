@@ -4,14 +4,14 @@ import numpy as np
 
 def generate_text_explanation(per, sample, target, changes_vec , anchs_vec):
     # -- Assumes -9s are accounted for --
-    text_string = "The model prediction for this client is "
+    text_string = "The model predicts that this client is "
 
     if (per > 0.5):
         text_string += "good"
     else:
         text_string += "bad"
 
-    text_string += " with a prediction score of " + str(round(per,3)*100) + "%\n\n"
+    text_string += " with a score of " + str(int(per*100)) + "%\n\n"
 
     changes_lst = []
     anchs_lst = []
@@ -30,7 +30,7 @@ def generate_text_explanation(per, sample, target, changes_vec , anchs_vec):
         text_string += "\n\n"
         text_string += changes_text_exp(sample, target, changes_lst, per)
 
-    print(text_string)
+    # print(text_string)
     return text_string
 
 
@@ -40,14 +40,14 @@ def anchs_text_exp(sample, col_lst, per):
 
     # -- Writes the header line -- 
     if (per>0.5):
-        explanation = "Key Features: \nThe key factors that have contributed to the model's positive decision:"
+        explanation = "Key Features \nThe key factors that have contributed to the model's positive decision:"
     else:
-        explanation = "Key Features: \nThe key factors that have contributed to the model's positive decision:"
+        explanation = "Key Features \nThe key factors that have contributed to the model's negative decision:"
 
     for col in col_lst:
 
 
-        print(col)
+        # print(col)
 
         if (col == 0):
             name = " External Risk Estimate "
@@ -66,7 +66,7 @@ def anchs_text_exp(sample, col_lst, per):
             if (per>0.5): 
                 explanation += "\n - "+ "A considerable period of " + val + " Months has passed Since Oldest Trade was Open."
             else: 
-                explanation += "\n - "+ "Only " + val + " Months has passed Since Oldest Trade was Open."
+                explanation += "\n - "+ "Only " + val + " Months have passed Since Oldest Trade was Open."
         
         elif (col == 2):
             name = "Months Since Last Trade Open"
@@ -118,9 +118,9 @@ def anchs_text_exp(sample, col_lst, per):
             # Monotonicity Decreasing
             val = str(sample[7])
             if (per>0.5):
-                explanation += "\n - "+ "Since this client has a overwhelming percentage of Trades that Never gone Delinquent."
+                explanation += "\n - "+ "This client has a overwhelming percentage of Trades that have Never gone Delinquent."
             else:
-                explanation += "\n - "+ "Since this client has a alarmingly small percentage of Trades that Never gone Delinquent."
+                explanation += "\n - "+ "This client has a alarmingly small percentage of Trades that have Never gone Delinquent."
 
         elif (col == 8):
             name = "Months Since Most Recent Delq."
@@ -207,9 +207,9 @@ def anchs_text_exp(sample, col_lst, per):
             if val == "150":
                 explanation += "\n - "+ "No inquiries have been made against this person."
             if (per>0.5): 
-                explanation += "\n - "+ val + " Months has passed since the most Recent Inquiry"
+                explanation += "\n - "+ val + " Months have passed since the most Recent Inquiry"
             else:
-                explanation += "\n - "+ "Only " + val + " months has passed since the most Recent Inquiry"
+                explanation += "\n - "+ "Only " + val + " months have passed since the most Recent Inquiry"
         elif (col == 15):
             name = "Inq Last 6 Months"
             # Monotonicity Increasing
@@ -227,7 +227,7 @@ def anchs_text_exp(sample, col_lst, per):
             else:
                 explanation += "\n - "+ "The client has too many inquiries in the Past 6 Months even when excluding the last 7 days"
         elif (col == 17):
-            print("enter")
+            # print("enter")
             name =  "Revolving Burden"
             # Monotonicity Increasing
             val = str(sample[17])
@@ -276,9 +276,9 @@ def changes_text_exp(sample, target, col_lst, per):
 
     # -- Writes the header line -- 
     if (per<0.5):
-        explanation = "Suggested Changes: \nIf the client manages to make the following improvements the model would predict a positive decision:" 
+        explanation = "Suggested Changes \nIf the client manages to make the following improvements the model would predict a positive decision:" 
     else:
-        explanation = "Warnings!: \nIf the client's results fall for the following features the model would revert to a negative decision:" 
+        explanation = "Warnings \nIf the client's results fall for the following features the model would revert to a negative decision:" 
     
     # -- Hard coded text -- 
     for col in col_lst:
@@ -511,9 +511,9 @@ def changes_text_exp(sample, target, col_lst, per):
             val = str(sample[21])
             tar = str(target[21])
             if (per>0.5):
-                explanation += "\n - "+ "The small number Bank Trades that have a High Utilization Ratio should be maintained and kept below " + tar + '.'
+                explanation += "\n - "+ "The small number of Bank Trades that have a High Utilization Ratio should be maintained below " + tar + '.'
             else:
-                explanation += "\n - "+ "The high number Bank Trades that have a High Utilization Ratio has to be decreased below the " + tar + ' mark.'
+                explanation += "\n - "+ "The high number of Bank Trades that have a High Utilization Ratio has to be decreased below the " + tar + ' mark.'
         elif (col == 22):
             name = "% Trades with balance"
             # Monotonicity Unknown

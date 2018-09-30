@@ -8,11 +8,11 @@
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,400italic,700' rel='stylesheet' type='text/css'>
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
     <link href="static/css/scratchstyle-light.css" rel="stylesheet" type="text/css">
+    <!-- D3.js and jQuery source -->
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <!-- <script type="text/javascript" src="static/js/d3.min.js"></script> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <!-- <script type="text/javascript" src="static/js/jquery-3.3.1.min.js"></script> -->
-    <!-- SVG scripts -->
     <!-- SVG scripts -->
     <script type="text/javascript" src="static/js/main_graph.js"></script>
     <script type="text/javascript" src="static/js/percentage_bar.js"></script>
@@ -23,7 +23,7 @@
     <div class="main">
       <div class="left-sidebar">
         <header class="site-header">
-          <h1>FICO CHALLENGE</h1>
+          <h1><a href="intro">FICO CHALLENGE</a></h1>
         </header>
         <nav class="left-nav">
           <ul>
@@ -41,37 +41,41 @@
       </div>
       
       <div class="right-side" id="demo">
-        <table class="right-header">
-          <tr>
-              <td id="id-display">
-                <!-- ID: 100 -->
-              </td>
-              <td id="category-display">
-                <div id="container">
-                  <div class="cat-text"></div>
-                  <img id="category-img">
-                </div>
-              </td>
-              <!-- <td id="category-text">TP</td> -->
-              <td id="space"></td>
-              <td id="model-display">
-                <!-- Model Prediction: 61% -->
-              </td>
-          </tr>
-        </table>
+
+
+        <img src="static/images/ind_instructions.png" id="ind-instruction">
+
+
+
+        <div id = "header-container">
+          <table class="right-header" align="center">
+            <tr>
+                <td id="id-display">
+  
+                </td>
+                <td id="category-display">
+                  <div id="container">
+                    <div class="cat-text"></div>
+                    <img id="category-img">
+                  </div>
+                </td>
+            
+                <td id="space"></td>
+                <td id="model-display">
+           
+                </td>
+            </tr>
+          </table>
+        </div>
         <div class="d3-space">
           <!-- D3 graphs -->
         </div>
-        <div id="txt-space">
-          <!-- <input id="check-density" type="checkbox" name="density" value="yes" checked onchange="densityCheckHandle(event)" style="display: none;">
-          <p id="check-density-text"></p>
-          <br>
-          <input id="check-monot" type="checkbox" name="monotonicity" value="no" onchange="monotCheckHandle(event)" style="display: none;">
-          <p id="check-monot-text"></p>
-          <br>
-          <input id="check-sort" type="checkbox" name="sort" value="no" onchange="sortCheckHandle(event)" style="display: none;">
-          <p id="check-sort-text"></p>
-          <br> -->
+          <div id="txt-space-key">
+          </div>
+          <div id="txt-space-chg">
+          </div>
+          <div id="similar-samples">
+          </div>
           <!-- Text explanation -->
 
         </div>
@@ -80,10 +84,8 @@
 
     <script>
 
-      // var dark_shade = "#727f87";
-      var dark_shade = "rgb(126, 140, 149)";
-      // var light_shade = "#b1c4d1";
-      var light_shade = "rgb(177, 196, 209)"
+      var dark_shade = "rgb(177, 196, 209)";
+      var light_shade = "white";
 
     
       function addSquare(elemn, category, size) {
@@ -149,6 +151,8 @@
               var cells = rows[i].split(",");
               pre_array.push(cells);
             }
+            console.log("CSV");
+            prep_content(add_loader, id_list, add_images, create_buttons, from_global);
           }
         }
       }
@@ -160,7 +164,9 @@
           alert('Giving up :( Cannot create an XMLHTTP instance');
           return false;
         }
-        document.getElementById("txt-space").innerHTML = "";
+        document.getElementById("txt-space-key").innerHTML = "";
+        document.getElementById("txt-space-chg").innerHTML = "";
+        document.getElementById("similar-samples").innerHTML = "";
         if (source == 'form') {
           var s = document.getElementById("search-bar").value;
           document.getElementById("search-bar").value="";
@@ -171,9 +177,11 @@
         else if (source == "global") {
           var s = sample.toString();
         }
-
         else if (source == "prop-button"){
           var s = document.getElementById("id-display").innerHTML.substring(4);
+        }
+        else if (source == "similar"){
+          var s = sample.innerHTML;
         }
 
         var monot = "False";
@@ -194,6 +202,13 @@
       function alertContents() {
 
         if (httpRequest.readyState === XMLHttpRequest.OPENED) {
+          var right = document.getElementById("demo");
+          console.log(right.childNodes[1]);
+          if (right.childNodes[1].id == "ind-instruction"){
+            right.removeChild(right.childNodes[1]);
+          }
+          document.getElementById("demo").style.textAlign = "center";
+          
           document.getElementsByClassName("d3-space")[0].innerHTML="";
           var load_wrap = document.createElement("div");
           load_wrap.className = "loader_wrap";
@@ -212,13 +227,7 @@
             if (document.getElementsByClassName("ind-header")[0].style.display == "none"){
               document.getElementsByClassName("ind-header")[0].style.display = "table";
             }
-            // else {
-            //   console.log("enter");
-            //   var r_side = document.getElementsByClassName("right-side")[0];
-            //   r_side.removeChild(r_side.childNodes[2]);
-            //   create_buttons();
-            //   document.getElementsByClassName("ind-header")[0].style.display = "table";
-            // }
+      
                       
             var resp_arr = httpRequest.responseText.split('~');
             var testData = [];
@@ -230,7 +239,6 @@
               densityData.push(JSON.parse(resp_arr[i+23]));
             }
 
-            // console.log(densityData);
             var resp = JSON.parse(resp_arr[46]);
             
             var index = resp['sample'].toString();
@@ -240,6 +248,7 @@
             var category = resp['category'];
             var result = resp['predicted'];
             var text_exp = resp['text_exp'];
+            var similar_ids = resp['similar_ids'];
             var disp_percent = good_percent;
             document.getElementById("id-display").innerHTML = "ID: " + index;
             document.getElementById("model-display").innerHTML = "";
@@ -250,44 +259,96 @@
             document.getElementsByClassName("cat-text")[0].innerHTML = category;
             document.getElementsByClassName("d3-space")[0].innerHTML = "";
 
+            if (trans_sample == '-9') {
+              document.getElementsByClassName("d3-space")[0].innerHTML = "";
+              var error = document.createElement("img");
+              error.src = "static/images/errors.png";
+              error.id = "error-img";
+              document.getElementsByClassName("d3-space")[0].append(error);
+              document.getElementsByClassName("ind-text")[0].innerHTML = "";
+              return;
+            }
+
             // Text explanation
-            document.getElementById("txt-space").innerHTML = "";
+            document.getElementById("txt-space-key").innerHTML = "";
+            document.getElementById("txt-space-chg").innerHTML = "";
+            document.getElementById("similar-samples").innerHTML = "";
             var p_exp = document.createElement("p");
             var line = "";
             var start = 0;
             var end = 0;
-            console.log(text_exp);
+            var change_good = text_exp.indexOf("Suggested Changes");
+            var change_bad = text_exp.indexOf("Warnings");
+            var keys = text_exp.indexOf("Key Features");
+            start = text_exp.indexOf("\n");
+            var line_1 = text_exp.substring(0, start);
 
-            for (j=0; j<text_exp.length; j++){
+            document.getElementsByClassName("ind-text")[0].innerHTML = line_1;
+
+            for (j=text_exp.indexOf("\n")+1; j<text_exp.length; j++){
               if (text_exp[j] == "\n" || j==text_exp.length-1){
                 var p_exp = document.createElement("p");
                 end = j;
-                line = text_exp.substring(start,end);
+                line = text_exp.substring(start,end+1);
                 p_exp.innerHTML = line;
-                var br = document.createElement("br");
-                if (line.length > 1){
-                  document.getElementById("txt-space").append(p_exp);
-                  document.getElementById("txt-space").append(br);
+                
+                if (line.indexOf("Suggested Changes")>-1 || line.indexOf("Warnings")>-1 || line.indexOf("Key Features")>-1){
+                  p_exp.style.fontWeight = "bold";
+                  p_exp.style.fontSize = "13px";
+                }
+                if (line.indexOf(":")>-1){
+                  p_exp.style.marginBottom = "5px";
+                }
+
+                if (line.length > 1 && change_good == -1 && change_bad == -1){
+                  document.getElementById("txt-space-key").append(p_exp);
+                  
+                }
+                else if (line.length > 1 && keys == -1){
+                  document.getElementById("txt-space-chg").append(p_exp);
+                 
+                }
+                else if (line.length > 1 && j<Math.max(change_good, change_bad)){
+                  document.getElementById("txt-space-key").append(p_exp);
+               
+                }
+                else if (line.length > 1 && j>=Math.max(change_good, change_bad)){
+                  document.getElementById("txt-space-chg").append(p_exp);
+                
                 }
                 start = end+1;
               }
             }
 
-            if (trans_sample == '-9') {
-              document.getElementsByClassName("d3-space")[0].innerHTML = "SPECIAL CASE";
+            if (similar_ids.length > 0){
+              var sim_h = document.createElement("p");
+              sim_h.style.fontSize = "13px";
+              sim_h.style.fontWeight = "bold";
+              sim_h.innerHTML = "Instances where changes have been applied:";
+              document.getElementById("similar-samples").append(sim_h);
+
+              console.log(similar_ids);
+              for (j=0; j<similar_ids.length; j++){
+                  var sim_p = document.createElement("a");
+                  line = similar_ids[j];
+                  sim_p.innerHTML = line;
+                  sim_p.onclick = function () { makeRequest('similar', this); };
+                  document.getElementById("similar-samples").append(sim_p);
+              }
+            
+            }
+
+          
+            if (document.getElementById("density-button").style.backgroundColor == dark_shade){
+             
+
+              draw_graph(testData, densityData, result);
             }
             else {
-              if (document.getElementById("density-button").style.backgroundColor == dark_shade){
-                // console.log(densityData);
-                draw_graph(testData, densityData, result);
-              }
-              else {
-                draw_graph(testData, "no", result);
-              }
-
-              
-
+              draw_graph(testData, "no", result);
             }
+
+
           } else {
             alert('HttpRequest Error')
           }
@@ -296,17 +357,11 @@
 
       function prep_content(callback0, callback1, callback2, callback3, callback4) {
 
-        callback0();
+        setTimeout(function(){ callback1();}, 50);
 
-        // setTimeout(function(){ alert("Hello"); }, 3000);
-        setTimeout(function(){ callback1();
-
-        callback2(); }, 50);
-
-        callback3();
+        setTimeout(function(){ callback3();}, 50);
 
         callback4();
-
       }
 
       function add_loader() {
@@ -333,16 +388,51 @@
           li_div.style.float = "right";
           li_div.style.margin = "0px 25px 0px 0px";
           li_div.id = "link-div-" + i.toString();
+          
+
+          var sqr = document.createElement("img");
+       
+          if (pre_array[i][2].trim() == "FN"){
+            sqr.src="static/images/square2-min.jpg";
+          }
+          else if (pre_array[i][2].trim() == "TN"){
+            sqr.src="static/images/square4-min.jpg";
+          }
+          else if (pre_array[i][2].trim() == "FP"){
+            sqr.src="static/images/square1-min.jpg";
+          }
+          else if (pre_array[i][2].trim() == "TP"){
+            sqr.src="static/images/square3-min.jpg";
+          } 
+          else if (pre_array[i][2].trim() == "NA"){
+            sqr.src="static/images/square5-min.jpg";
+          } 
+          sqr.height="15";
+          sqr.width="15";
+          sqr.style.borderRadius = "50%";
+          sqr.style.verticalAlign = "middle";
+          sqr.style.margin = "4px 0px 0px 0px";
+          sqr.style.float = "left";
+          sqr.className = "mini-category-img";
+          var link_string = pre_array[i][3] + "\xa0 \xa0"  + pre_array[i][4];
+          li_div.innerHTML = link_string;
+          li_div.append(sqr);
+
           para.append(li_div);
           list_cont.append(para);
         }
         console.log("LIST");
-        document.getElementsByClassName("id-list")[0].innerHTML="";
-        document.getElementsByClassName("id-list")[0].append(list_cont);
+        
+        setTimeout(function(){ 
+          document.getElementsByClassName("id-list")[0].innerHTML="";
+          document.getElementsByClassName("id-list")[0].append(list_cont);}, 150);
+
+
       }
 
       function add_images() {
-        for (var i = 1; i < pre_array.length; i++) {
+
+        for (var i = 1; i < pre_array.length-2; i++) {
 
           var sqr = document.createElement("img");
           if (pre_array[i][2].trim() == "FN"){
@@ -395,8 +485,7 @@
 
         var ind_text = document.createElement("td");
         ind_text.className = "ind-text";
-        console.log("ADSGAS");
-        ind_text.innerHTML = "WARNINGS";
+        ind_text.innerHTML = "";
 
         var btn_td = document.createElement("td");
         btn_td.className = "btn-td";
@@ -436,22 +525,25 @@
         ind_header.append(row);
         ind_header.style.display = "none";
         var right_side = document.getElementsByClassName("right-side")[0];
-        right_side.insertBefore(ind_header, right_side.childNodes[2]);
+        right_side.insertBefore(ind_header, right_side.childNodes[4]);
       }
 
       function from_global() {
         var url_str = window.location.href;
         var initial_sample = parseInt(url_str.substring(url_str.indexOf("sample")+7));
-        if (isNaN(initial_sample)) {      
+        console.log(initial_sample);
+        if (isNaN(initial_sample)) {
+          console.log("mnotlog"); 
+          document.getElementById("ind-instruction").style.display = "block";
         }
         else {
-          setTimeout(function(){makeRequest("global", initial_sample);}, 100);
+          setTimeout(function(){makeRequest("global", initial_sample);}, 50);
         }
       }
 
-      $.when( fetch_csv() ).then(function(){setTimeout(function(){prep_content(add_loader, id_list, add_images, create_buttons, from_global); }, 400)});
 
-
+      add_loader();
+      fetch_csv();
 
     </script>
 

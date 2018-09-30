@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import request, jsonify, json
+from flask import request, jsonify, json, redirect
 from flask import render_template
 import pandas as pd
 import numpy as np
@@ -16,7 +16,6 @@ np.random.seed(12345)
 
 def display_data (sample):
 	sample -= 1
-	print(X[sample])
 	if X[sample][0] == -9:
 		category = "NA"
 		return sample, 0, 0, category, -1
@@ -54,6 +53,7 @@ def sample_transf ():
 
 # ------- Initialize model ------- #
 
+
 vals = pd.read_csv("static/data/final_data_file.csv", header=None).values
 X = vals[:,1:]
 y = vals[:,0]
@@ -80,6 +80,10 @@ sample_transf()
 app = Flask(__name__) # static_folder="C:/Users/Oscar/Documents/UGR 2018/Fico-Challenge-master/VisualApp1/static")
 
 @app.route('/')
+def hello():
+    return redirect("/intro")
+
+@app.route('/intro')
 def intro_site():
 	return render_template("index_intro.html")
 
@@ -122,13 +126,10 @@ def handle_request():
 				dict_array = []
 				if monot:
 					dict_array = dict_array_monot
-					print("monot")
 				else:
 					dict_array = dict_array_orig
-					print("orig")
 
 				if sort:
-					print('sort')
 					data_array, dict_array = sort_by_val(data_array, dict_array)
 
 				for dct in data_array:
@@ -140,9 +141,11 @@ def handle_request():
 					ret_string += "~"
 
 				text_exp = generate_text_explanation(good_percent, X[sample], change_row, change_vector , anchors)
+				similar_ids = detect_similarities("static/data/pred_data_x.csv","static/data/final_data_file.csv", X[sample], change_row, bins_centred, good_percent)
+				similar_ids = similar_ids[:min(len(similar_ids),10)]
 				ret_string += json.dumps({'sample': sample+1, 'good_percent': good_percent, 'model_correct': model_correct,
 										  'category': category, 'predicted': predicted, 'trans_sample': trans_sample,
-										  'text_exp': text_exp})
+										  'text_exp': text_exp, 'similar_ids': similar_ids})
 				
 				return ret_string
 
@@ -186,7 +189,7 @@ def handle_request_mini_graphs():
 
 	if request.method == 'GET':
 
-		id_list = request.args.get('id_list').split(',')
+		id_list = request.args.get('id_list').split(',')[:-1]
 
 		# Cap number of minigraphs on right panel
 		sample_cap = min(len(id_list), 30)
@@ -211,32 +214,21 @@ def handle_request_ft():
 		# False = changes, True = keyfts
 		algorithm = (request.args.get('algorithm') == "True")
 
-		# print(algorithm)
-
 		if ft_list[0] == -1 or ft_list == ['']:
 			return ""
 		else:
 			ft_list = [int(x) for x in ft_list]
 			ft_list.sort()
 
-		# print(ft_list)
-		# FUNCTION TO GENERATE LIST OF COMBINATION AND RANK THEM
-
 		combinations = combination_finder("static/data/pred_data_x.csv",ft_list,algorithm)
-
-		#textData, squareData = anchor_finder("pred_data_x1.csv","final_data_file.csv",[1,4])
 
 		ret_arr = []
 		if not algorithm:
-			print("changes")
-			for combi in combinations[:15]:
+			for combi in combinations[:min(15,len(combinations))]:
 				ret_arr.append(changes_generator("static/data/pred_data_x.csv", combi))
 		else:
-			print("keyfts")
-			for combi in combinations[:15]:
-				print(combi)
-				names, good_squares, bad_squares, good_samples, bad_samples = anchor_generator("static/data/pred_data_x.csv","static/data/final_data_file.csv", combi)
-				ret_arr.append([names, good_squares, bad_squares, good_samples, bad_samples])
+			for combi in combinations[:min(15,len(combinations))]:
+				ret_arr.append(anchor_generator("static/data/pred_data_x.csv","static/data/final_data_file.csv", combi))
 
 
 		## Parse values into python dictionary
@@ -251,4 +243,5 @@ def handle_request_ft():
 if __name__ == '__main__':
 
 	np.random.seed(12345)
-	app.run(port=5005, host="0.0.0.0", debug=True)
+
+	app.run(port=5005, host="0.0.0.0", debug=False)

@@ -18,7 +18,6 @@ def evaluate_data_set(data):
           
     return avg_list, std_list
 
-
 def perturb_special(min_val,max_val,avg,std,no_val):
     new_col = np.random.normal(avg, std, no_val)
     # Note: these functions have poor time complexity
@@ -27,7 +26,6 @@ def perturb_special(min_val,max_val,avg,std,no_val):
     new_col = new_col.round(0)
     return new_col
     
-
 def find_anchors(model, data_set, sample, no_val):
     # Account for the special categorical columns
     special_cols = [9,10]
@@ -54,12 +52,12 @@ def find_anchors(model, data_set, sample, no_val):
     # Setting random seed
     np.random.seed(150)
 
-    # print(avg_list, std_list, no_val)
+
     
     while (iterations > 0):
         # Retains best result and the corresponding index
         max_ind = (0,0)
-        # print("iteration")
+
         # Assign column that is being tested
         for test_col in range(features):
             new_data = np.empty([features, no_val])
@@ -73,19 +71,14 @@ def find_anchors(model, data_set, sample, no_val):
                         new_data[ind] = perturb_special(0,7,avg_list[ind],std_list[ind],no_val)
                     else:
                         new_data[ind] = np.random.normal(avg_list[ind], std_list[ind], no_val)
-                        # print(new_data[ind])
-                        # print((avg_list[ind], std_list[ind], no_val))
+
             
             new_data = new_data.transpose()
-            # print(np.random.normal(),'a')
-            # print(new_data)
+
 
             # Run Model 
             pred = model.run_model_data(new_data)
             acc = (np.mean(pred == decision))
-
-            # print(pred)
-            # print(acc)
             
             if (acc > max_ind[0]):
                 max_ind = (acc,test_col)
@@ -102,7 +95,6 @@ def find_anchors(model, data_set, sample, no_val):
         
     print("!!! No anchors found !!!")
     return None
-
 
 def perturb_row_feature(model, row, row_idx, feat_idx, current_bins, X_bin_pos, mean_bins, mono_arr, improve):
     
@@ -177,8 +169,7 @@ def perturb_row_feature(model, row, row_idx, feat_idx, current_bins, X_bin_pos, 
             p_row[feat_idx] = prev_value
         
         return (p_row, c_current_bins)
-    
-    
+      
 def percent_cond (improve, percent):
     if improve and percent <= 0.5:
         return True
@@ -186,7 +177,6 @@ def percent_cond (improve, percent):
         return True
     else:
         return False
-    
     
 def find_MSC (model, data, k_row, row_idx, X_bin_pos, mean_bins):
     
@@ -253,10 +243,7 @@ def find_MSC (model, data, k_row, row_idx, X_bin_pos, mean_bins):
         print("Decision can't be moved within thresholds:")
         return None,None
 
-
 def instance_explanation(model, data, k_row, row_idx, X_bin_pos, mean_bins):
-
-    # print('getting called')
     
     initial_percentage = model.run_model(k_row)
 
@@ -265,16 +252,32 @@ def instance_explanation(model, data, k_row, row_idx, X_bin_pos, mean_bins):
 
     return change_vector, change_row, anchors, initial_percentage
 
-
 def prepare_for_D3(sample, bins_centred, change_row, change_vector, anchors, percent,monot):
     data = []
     
-    names = ["External Risk Estimate","Months Since Oldest Trade Open","Months Since Last Trade Open"
-             ,"Average Months in File","Satisfactory Trades","Trades 60+ Ever","Trades 90+ Ever"
-            ,"% Trades Never Delq.","Months Since Last Delq.","Max Delq. Last 12M","Max Delq. Ever","Total Trades"
-             ,"Trades Open Last 12M","% Installment Trades", "Months Since Most Recent Inq","Inq Last 6 Months"
-             ,"Inq Last 6 Months exl. 7 days", "Revolving Burden","Installment Burden","Revolving Trades w/ Balance"
-            ,"Installment Trades w/ Balance","Bank Trades w/ High Utilization Ratio","% trades with balance"]
+    names = ["External Risk Estimate", 
+                      "Months Since Oldest Trade Open",
+                      "Months Since Last Trade Open",
+                      "Average Months in File",
+                      "Satisfactory Trades",
+                      "Trades 60+ Ever",
+                      "Trades 90+ Ever",
+                      "% Trades Never Delq.",
+                      "Months Since Last Delq.",
+                      "Max Delq. Last 12M",
+                      "Max Delq. Ever",
+                      "Total Trades",
+                      "Trades Open Last 12M",
+                      "% Installment Trades",
+                      "Months Since Most Recent Inq",
+                      "Inq Last 6 Months",
+                      "Inq Last 6 Months exl. 7 days",
+                      "Revolving Burden",
+                      "Installment Burden",
+                      "Revolving Trades w/ Balance:",
+                      "Installment Trades w/ Balance",
+                      "Bank Trades w/ High Utilization Ratio",
+                      "% Trades w/ Balance"]
     
 
     monot_array = np.array([1,1,1,1,1,0,0,1,1,1,1,-1,0,-1,1,0,0,0,0,-1,-1,0,-1])
@@ -350,7 +353,6 @@ def prepare_for_D3(sample, bins_centred, change_row, change_vector, anchors, per
         
     return data
 
-
 def scaling_data_density(data, bins_centred,monot):
     new_data = np.empty(data.shape)
     output_array = []
@@ -392,7 +394,6 @@ def scaling_data_density(data, bins_centred,monot):
 
     return output_array
 
-
 def sample_transf(X):
     trans_dict = {}
     my_count = 0
@@ -405,58 +406,50 @@ def sample_transf(X):
 
     return trans_dict
 
-
 def detect_similarities(pre_data_file, all_data_file, sample_vec, changed_row, bins, percent):
+    # --- Runs only if changes occur --- 
+
+    """
+    Criteria:
+    - Decision is flipped
+    - Range: +/- 1.2 single bin
+    - Variations Allowed: 2
+
+    """
+
     pre_data = pd.read_csv(pre_data_file).values
     all_data = pd.read_csv(all_data_file,header=None).values
 
     similar_rows = []
 
-    if (change_row is None):
-        original = sample_vec
+    if (changed_row is None):
+        return []
 
     else:
-        original = change_row
-
-
+        original = changed_row
 
 
     for sample_id in range(all_data.shape[0]):
 
-    # for sample_id in range(6,10):
         test_sample = all_data[sample_id][1:]
-        # new_index = int(transformer[str(sample)])
         
         fail_count = 0
         
         for col in range(original.shape[0]):  
             test_val = test_sample[col]
-            uncertainty = 1.5*(bins[col][2]-bins[col][1])
-
-
-            # print("Test_val", test_val)
+            uncertainty = 1.2*(bins[col][2]-bins[col][1])
 
             bottom_thresh = original[col]-uncertainty
             top_thresh = original[col]+uncertainty
 
-            # print("Bottom",bottom_thresh)
-            # print("Top",top_thresh)
-
             if (test_val > top_thresh or test_val < bottom_thresh):
                 fail_count += 1;
 
-        if (fail_count < 4):
+        if (fail_count <= 2):
             if np.round(percent,0) != np.round(pre_data[sample_id][1]):
-                similar_rows.append(sample_id)
+                similar_rows.append(sample_id+1)
 
-    print(similar_rows)
     return similar_rows
-
-
-
-
-    # new_sample_ind = int(transform[str(s)])
-
 
 def sort_by_val(main, density):
     ordered_main = []
@@ -470,32 +463,3 @@ def sort_by_val(main, density):
 
     return ordered_main, ordered_density
 
-
-# vals = prepare_for_analysis("final_data_file.csv")
-
-# X_orig = pd.read_csv("final_data_file.csv",header=None).values[:,1:]
-
-# X = vals[:,1:]
-# y = vals[:,0]
-
-# no_samples, no_features = X.shape
-
-# svm_model = SVM_model(None,"final_data_file.csv")
-# svm_model.train_model(0.001)
-# svm_model.test_model()
-
-# sample = 10 # NOTE THIS VALUE
-
-# bins_centred, X_pos_array, init_vals = divide_data_bins(X,[9,10])
-# change_vector, change_row, anchors, percent = instance_explanation(svm_model, X, X[sample], sample, X_pos_array, bins_centred)
-
-# data_array = prepare_for_D3(X[sample], bins_centred, change_row, change_vector, anchors, percent,False)
-# dens_array = scaling_data_density(X, bins_centred,False)
-
-# new_data, new_dens = sort_by_val(data_array,dens_array)
-
-
-# transformer = sample_transf(X_orig)
-# # for i_sample in range(200,220):
-# #     change_vector, change_row, anchors, percent = instance_explanation(svm_model, X, X[i_sample], sample, X_pos_array, bins_centred)
-# #     similar_ids = detect_similarities("pre_data1.csv","final_data_file.csv", X[i_sample] ,change_row, bins_centred, percent)
